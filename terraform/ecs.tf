@@ -25,7 +25,7 @@ module "container_definition" {
 
   log_options = {
     awslogs-region        = "eu-central-1"
-    awslogs-group         = "${aws_cloudwatch_log_group.this.name}"
+    awslogs-group         = "example-app"
     awslogs-stream-prefix = "ecs-service"
   }
 }
