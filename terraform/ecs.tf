@@ -119,7 +119,7 @@ resource "aws_iam_role_policy" "task_role" {
 }
 
 resource "aws_ecs_task_definition" "this" {
-  family                   = "green-blue-ecs-example-service"
+  family                   = "green-blue-ecs-example"
   container_definitions    = "${module.container_definition.json}"
   execution_role_arn       = "${aws_iam_role.execution_role.arn}"
   task_role_arn            = "${aws_iam_role.task_role.arn}"
@@ -167,6 +167,10 @@ resource "aws_ecs_service" "this" {
     security_groups = ["${aws_security_group.ecs.id}"]
 
     assign_public_ip = true
+  }
+
+  deployment_controller {
+    type = "CODE_DEPLOY"
   }
 
   depends_on = ["aws_lb_listener.this"]

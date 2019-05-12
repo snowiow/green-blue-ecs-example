@@ -271,9 +271,10 @@ resource "aws_codedeploy_app" "this" {
 }
 
 resource "aws_codedeploy_deployment_group" "this" {
-  app_name              = "${aws_codedeploy_app.this.name}"
-  deployment_group_name = "example-deploy-group"
-  service_role_arn      = "${aws_iam_role.codedeploy.arn}"
+  app_name               = "${aws_codedeploy_app.this.name}"
+  deployment_group_name  = "example-deploy-group"
+  deployment_config_name = "CodeDeployDefault.ECSAllAtOnce"
+  service_role_arn       = "${aws_iam_role.codedeploy.arn}"
 
   blue_green_deployment_config {
     deployment_ready_option {
