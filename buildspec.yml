@@ -1,11 +1,14 @@
 version: 0.2
 
 phases:
+  install:
+    commands:
+      - apt-get update
+      - apt install jq
   pre_build:
     commands:
       - echo Logging in to Amazon ECR...
       - $(aws ecr get-login --region eu-central-1 --no-include-email)
-      - REPOSITORY_URI="919687720168.dkr.ecr.eu-central-1.amazonaws.com/snowiow/green-blue-ecs-example"
       - IMAGE_TAG=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
   build:
     commands:
@@ -19,3 +22,9 @@ phases:
       - echo Pushing the Docker images...
       - docker push $REPOSITORY_URI:latest
       - docker push $REPOSITORY_URI:$IMAGE_TAG
+      - aws ecs describe-task-definition --task-definition vergleichsrechner | jq '.taskDefinition' > taskdef.json
+      - envsubst < appspec_template.yaml > appspec.yaml
+artifacts:
+  files:
+    - appspec.yaml
+    - taskdef.json
