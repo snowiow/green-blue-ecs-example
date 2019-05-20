@@ -69,6 +69,34 @@ data "aws_iam_policy_document" "pipeline" {
       "*",
     ]
   }
+
+  statement {
+    sid    = "AllowECS"
+    effect = "Allow"
+
+    actions = [
+      "ecs:*",
+    ]
+
+    resources = ["*"]
+  }
+
+  statement {
+    sid    = "AllowPassRole"
+    effect = "Allow"
+
+    resources = [
+      "*",
+    ]
+
+    actions = ["iam:PassRole"]
+
+    condition {
+      test     = "StringLike"
+      values   = ["ecs-tasks.amazonaws.com"]
+      variable = "iam:PassedToService"
+    }
+  }
 }
 
 resource "aws_iam_role_policy" "pipeline" {
@@ -130,12 +158,18 @@ data "aws_iam_policy_document" "codebuild" {
       "ecr:CompleteLayerUpload",
       "ecr:BatchCheckLayerAvailability",
       "ecr:PutImage",
-      "ecs:DescribeTaskDefinition",
     ]
 
     resources = [
       "${data.aws_ecr_repository.this.arn}",
     ]
+  }
+
+  statement {
+    sid       = "AllowECSDescribeTaskDefinition"
+    effect    = "Allow"
+    actions   = ["ecs:DescribeTaskDefinition"]
+    resources = ["*"]
   }
 
   statement {
@@ -175,6 +209,11 @@ resource "aws_codebuild_project" "this" {
     environment_variable {
       name  = "REPOSITORY_URI"
       value = "${data.aws_ecr_repository.this.repository_url}"
+    }
+
+    environment_variable {
+      name  = "TASK_DEFINITION"
+      value = "arn:aws:ecs:${var.region}:${var.account_id}:task-definition/${aws_ecs_task_definition.this.family}"
     }
 
     environment_variable {
@@ -256,6 +295,18 @@ data "aws_iam_policy_document" "codedeploy" {
 
     resources = [
       "${aws_s3_bucket.this.arn}/*",
+    ]
+  }
+
+  statement {
+    sid    = "AllowPassRole"
+    effect = "Allow"
+
+    actions = ["iam:PassRole"]
+
+    resources = [
+      "${aws_iam_role.execution_role.arn}",
+      "${aws_iam_role.task_role.arn}",
     ]
   }
 }

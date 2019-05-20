@@ -3,6 +3,16 @@ variable "github_token" {
   type        = "string"
 }
 
+variable "account_id" {
+  description = "id of the active account"
+  type        = "string"
+}
+
+variable "region" {
+  description = "region to deploy to"
+  type        = "string"
+}
+
 provider "aws" {
   region  = "eu-central-1"
   version = "2.7"
