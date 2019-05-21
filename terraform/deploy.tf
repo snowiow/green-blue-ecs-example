@@ -47,9 +47,7 @@ data "aws_iam_policy_document" "pipeline" {
       "codebuild:StartBuild",
     ]
 
-    resources = [
-      "${aws_codebuild_project.this.arn}",
-    ]
+    resources = ["${aws_codebuild_project.this.arn}"]
   }
 
   statement {
@@ -65,18 +63,14 @@ data "aws_iam_policy_document" "pipeline" {
       "codedeploy:RegisterApplicationRevision",
     ]
 
-    resources = [
-      "*",
-    ]
+    resources = ["*"]
   }
 
   statement {
     sid    = "AllowECS"
     effect = "Allow"
 
-    actions = [
-      "ecs:*",
-    ]
+    actions = ["ecs:*"]
 
     resources = ["*"]
   }
@@ -85,9 +79,7 @@ data "aws_iam_policy_document" "pipeline" {
     sid    = "AllowPassRole"
     effect = "Allow"
 
-    resources = [
-      "*",
-    ]
+    resources = ["*"]
 
     actions = ["iam:PassRole"]
 
@@ -160,9 +152,7 @@ data "aws_iam_policy_document" "codebuild" {
       "ecr:PutImage",
     ]
 
-    resources = [
-      "${data.aws_ecr_repository.this.arn}",
-    ]
+    resources = ["${data.aws_ecr_repository.this.arn}"]
   }
 
   statement {
@@ -289,13 +279,9 @@ data "aws_iam_policy_document" "codedeploy" {
     sid    = "AllowS3"
     effect = "Allow"
 
-    actions = [
-      "s3:GetObject",
-    ]
+    actions = ["s3:GetObject"]
 
-    resources = [
-      "${aws_s3_bucket.this.arn}/*",
-    ]
+    resources = ["${aws_s3_bucket.this.arn}/*"]
   }
 
   statement {
@@ -333,8 +319,7 @@ resource "aws_codedeploy_deployment_group" "this" {
     }
 
     terminate_blue_instances_on_deployment_success {
-      action                           = "TERMINATE"
-      termination_wait_time_in_minutes = 5
+      action = "TERMINATE"
     }
   }
 

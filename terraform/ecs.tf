@@ -24,7 +24,7 @@ module "container_definition" {
   ]
 
   log_options = {
-    awslogs-region        = "eu-central-1"
+    awslogs-region        = "${var.region}"
     awslogs-group         = "example-app"
     awslogs-stream-prefix = "ecs-service"
   }
@@ -58,18 +58,14 @@ data "aws_iam_policy_document" "execution_role" {
       "ecr:BatchCheckLayerAvailability",
     ]
 
-    resources = [
-      "${data.aws_ecr_repository.this.arn}",
-    ]
+    resources = ["${data.aws_ecr_repository.this.arn}"]
   }
 
   statement {
     sid    = "AllowECRAuth"
     effect = "Allow"
 
-    actions = [
-      "ecr:GetAuthorizationToken",
-    ]
+    actions = ["ecr:GetAuthorizationToken"]
 
     resources = ["*"]
   }
