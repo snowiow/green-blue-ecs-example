@@ -1,9 +1,9 @@
-data "aws_ecr_repository" "this" {
-  name = "snowiow/green-blue-ecs-example"
-}
-
 locals {
   container_name = "green-blue-ecs-example"
+}
+
+data "aws_ecr_repository" "this" {
+  name = "snowiow/${local.container_name}"
 }
 
 resource "aws_cloudwatch_log_group" "this" {
@@ -12,7 +12,7 @@ resource "aws_cloudwatch_log_group" "this" {
 
 module "container_definition" {
   source  = "cloudposse/ecs-container-definition/aws"
-  version = "0.10.0"
+  version = "0.13.0"
 
   container_name  = "${local.container_name}"
   container_image = "${data.aws_ecr_repository.this.repository_url}:latest"
@@ -156,7 +156,7 @@ resource "aws_ecs_service" "this" {
   }
 
   launch_type   = "FARGATE"
-  desired_count = 1
+  desired_count = 3
 
   network_configuration {
     subnets         = ["${aws_subnet.this.*.id}"]
