@@ -14,6 +14,6 @@ variable "region" {
 }
 
 provider "aws" {
-  region  = "eu-central-1"
+  region  = "${var.region}"
   version = "2.7"
 }
