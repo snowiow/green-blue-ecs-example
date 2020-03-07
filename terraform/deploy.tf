@@ -1,7 +1,9 @@
 resource "aws_s3_bucket" "this" {
-  bucket        = "example-app-codepipeline"
+  bucket        = "green-blue-example"
   force_destroy = true
 }
+
+data "aws_caller_identity" "current" {}
 
 data "aws_iam_policy_document" "assume_by_pipeline" {
   statement {
@@ -152,7 +154,7 @@ data "aws_iam_policy_document" "codebuild" {
       "ecr:PutImage",
     ]
 
-    resources = ["${data.aws_ecr_repository.this.arn}"]
+    resources = ["${aws_ecr_repository.this.arn}"]
   }
 
   statement {
@@ -198,12 +200,12 @@ resource "aws_codebuild_project" "this" {
 
     environment_variable {
       name  = "REPOSITORY_URI"
-      value = "${data.aws_ecr_repository.this.repository_url}"
+      value = "${aws_ecr_repository.this.repository_url}"
     }
 
     environment_variable {
       name  = "TASK_DEFINITION"
-      value = "arn:aws:ecs:${var.region}:${var.account_id}:task-definition/${aws_ecs_task_definition.this.family}"
+      value = "arn:aws:ecs:${var.region}:${data.aws_caller_identity.current.account_id}:task-definition/${aws_ecs_task_definition.this.family}"
     }
 
     environment_variable {
@@ -257,14 +259,10 @@ resource "aws_iam_role" "codedeploy" {
 
 data "aws_iam_policy_document" "codedeploy" {
   statement {
-    sid    = "AllowLoadBalancingAndECSModifications"
+    sid    = "AllowLoadbalancing"
     effect = "Allow"
 
     actions = [
-      "ecs:CreateTaskSet",
-      "ecs:DeleteTaskSet",
-      "ecs:DescribeServices",
-      "ecs:UpdateServicePrimaryTaskSet",
       "elasticloadbalancing:DescribeListeners",
       "elasticloadbalancing:DescribeRules",
       "elasticloadbalancing:DescribeTargetGroups",
@@ -275,6 +273,18 @@ data "aws_iam_policy_document" "codedeploy" {
     resources = ["*"]
   }
 
+  statement {
+    sid    = "AllowECS"
+    effect = "Allow"
+    actions = [
+      "ecs:CreateTaskSet",
+      "ecs:DeleteTaskSet",
+      "ecs:DescribeServices",
+      "ecs:UpdateServicePrimaryTaskSet",
+    ]
+
+    resources = ["arn:aws:ecs:us-east-1:706365375873:service/example-cluster/*"]
+  }
   statement {
     sid    = "AllowS3"
     effect = "Allow"
@@ -372,8 +382,8 @@ resource "aws_codepipeline" "this" {
 
       configuration = {
         OAuthToken = "${var.github_token}"
-        Owner      = "snowiow"
-        Repo       = "green-blue-ecs-example"
+        Owner      = "${var.github-owner}"
+        Repo       = "${var.github-repo}"
         Branch     = "master"
       }
     }
@@ -391,7 +401,7 @@ resource "aws_codepipeline" "this" {
       input_artifacts  = ["source"]
       output_artifacts = ["build"]
 
-      configuration {
+      configuration = {
         ProjectName = "${aws_codebuild_project.this.name}"
       }
     }
@@ -408,7 +418,7 @@ resource "aws_codepipeline" "this" {
       version         = "1"
       input_artifacts = ["build"]
 
-      configuration {
+      configuration = {
         ApplicationName                = "${aws_codedeploy_app.this.name}"
         DeploymentGroupName            = "${aws_codedeploy_deployment_group.this.deployment_group_name}"
         TaskDefinitionTemplateArtifact = "build"

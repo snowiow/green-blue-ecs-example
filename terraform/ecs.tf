@@ -2,8 +2,13 @@ locals {
   container_name = "green-blue-ecs-example"
 }
 
-data "aws_ecr_repository" "this" {
-  name = "snowiow/${local.container_name}"
+resource "aws_ecr_repository" "this" {
+  name                 = "progress"
+  image_tag_mutability = "MUTABLE"
+
+  image_scanning_configuration {
+    scan_on_push = false
+  }
 }
 
 resource "aws_cloudwatch_log_group" "this" {
@@ -12,10 +17,10 @@ resource "aws_cloudwatch_log_group" "this" {
 
 module "container_definition" {
   source  = "cloudposse/ecs-container-definition/aws"
-  version = "0.13.0"
+  version = "0.15.0"
 
   container_name  = "${local.container_name}"
-  container_image = "${data.aws_ecr_repository.this.repository_url}:latest"
+  container_image = "${aws_ecr_repository.this.repository_url}:latest"
 
   port_mappings = [
     {
@@ -58,7 +63,7 @@ data "aws_iam_policy_document" "execution_role" {
       "ecr:BatchCheckLayerAvailability",
     ]
 
-    resources = ["${data.aws_ecr_repository.this.arn}"]
+    resources = ["${aws_ecr_repository.this.arn}"]
   }
 
   statement {
@@ -156,10 +161,10 @@ resource "aws_ecs_service" "this" {
   }
 
   launch_type   = "FARGATE"
-  desired_count = 3
+  desired_count = 2
 
   network_configuration {
-    subnets         = ["${aws_subnet.this.*.id}"]
+    subnets         = "${aws_subnet.this.*.id}"
     security_groups = ["${aws_security_group.ecs.id}"]
 
     assign_public_ip = true

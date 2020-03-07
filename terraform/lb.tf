@@ -22,9 +22,9 @@ resource "aws_lb" "this" {
   internal           = false
   load_balancer_type = "application"
   security_groups    = ["${aws_security_group.lb.id}"]
-  subnets            = ["${aws_subnet.this.*.id}"]
+  subnets            = "${aws_subnet.this.*.id}"
 
-  tags {
+  tags = {
     Name = "example"
   }
 }
@@ -68,12 +68,12 @@ resource "aws_lb_listener" "this" {
 resource "aws_lb_listener_rule" "this" {
   listener_arn = "${aws_lb_listener.this.arn}"
 
-  "action" {
+  action {
     type             = "forward"
     target_group_arn = "${aws_lb_target_group.this.0.arn}"
   }
 
-  "condition" {
+  condition {
     field  = "path-pattern"
     values = ["/*"]
   }
